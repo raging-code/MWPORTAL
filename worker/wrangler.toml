@@ -1,0 +1,13 @@
+name = "mwportal-worker"
+main = "src/index.ts"
+compatibility_date = "2024-10-22"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mwportal-db"
+database_id = "2ac7b70a-0886-49aa-8cdf-d52bd5ab4602"
+
+[vars]
+JWT_SECRET = "y84XU2zGakgLnPFvo4854fYAQn92RZ07fME6wJX7xR5TWCN95u9Yx9x0h0wFjXDP"

@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "routes": [
+    { "pattern": "/api/*", "script": "mwportal-worker" },
+    { "pattern": "/*", "fallthrough": true }
+  ]
+}
