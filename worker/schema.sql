@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS time_entries (
   clock_out TEXT,
   auto_timeout INTEGER NOT NULL DEFAULT 0,
   system_timeout INTEGER NOT NULL DEFAULT 0,
+  credited INTEGER NOT NULL DEFAULT 1,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

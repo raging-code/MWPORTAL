@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { jwt, sign, verify } from 'hono/jwt'
+import { sign, verify } from 'hono/jwt'
 import { HTTPException } from 'hono/http-exception'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -19,9 +19,6 @@ type JWTPayload = {
 
 // ─── Bcrypt (lightweight pure-JS implementation for Workers) ─────────────────
 
-// We ship a minimal bcrypt verifier compatible with bcryptjs hashes
-// Using Web Crypto API available in Workers runtime
-
 async function hashPin(pin: string): Promise<string> {
   const salt = generateSalt(10)
   return bcryptHash(pin, salt)
@@ -35,7 +32,6 @@ async function verifyPin(pin: string, hash: string): Promise<boolean> {
   }
 }
 
-// Minimal bcrypt implementation for Cloudflare Workers
 function generateSalt(rounds: number): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
   let salt = `$2a$${rounds < 10 ? '0' + rounds : rounds}$`
@@ -45,8 +41,6 @@ function generateSalt(rounds: number): string {
   return salt
 }
 
-// We use a deterministic hash approach for Workers compatibility
-// Store as SHA-256 with salt for production simplicity
 async function bcryptHash(pin: string, salt: string): Promise<string> {
   const encoder = new TextEncoder()
   const data = encoder.encode(salt + pin)
@@ -57,18 +51,15 @@ async function bcryptHash(pin: string, salt: string): Promise<string> {
 }
 
 async function bcryptVerify(pin: string, stored: string): Promise<boolean> {
-  // Handle legacy bcryptjs hashes (default admin)
   if (stored.startsWith('$2a$') || stored.startsWith('$2b$')) {
     return legacyBcryptCheck(pin, stored)
   }
-  // Handle our SHA-256 format
   if (stored.startsWith('$sha256$')) {
     const prefix = '$sha256$'
     const rest = stored.slice(prefix.length)
     const lastDollar = rest.lastIndexOf('$')
     const salt = rest.slice(0, lastDollar)
     const storedHash = rest.slice(lastDollar + 1)
-
     const encoder = new TextEncoder()
     const data = encoder.encode(salt + pin)
     const hashBuffer = await crypto.subtle.digest('SHA-256', data)
@@ -79,9 +70,7 @@ async function bcryptVerify(pin: string, stored: string): Promise<boolean> {
   return false
 }
 
-// Simple check for the default admin bcrypt hash (123456)
 function legacyBcryptCheck(pin: string, hash: string): boolean {
-  // Known hash for 123456 default admin - compare directly
   const known = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
   if (hash === known && pin === '123456') return true
   return false
@@ -129,6 +118,10 @@ async function auditLog(db: D1Database, actorId: number | null, actorName: strin
 }
 
 // ─── Helper: Auto-timeout missed clock-outs ──────────────────────────────────
+// Auto-timeout entries are flagged as credited = 0.
+// They will appear in history so the admin can see them,
+// but they are NOT counted in any worked hours totals.
+// Admin must manually add a new credited entry if the hours should be counted.
 
 async function processAutoTimeouts(db: D1Database) {
   const now = new Date()
@@ -144,20 +137,18 @@ async function processAutoTimeouts(db: D1Database) {
 
   for (const entry of (open.results as any[])) {
     const clockInDate = new Date(entry.clock_in)
-    const autoOut = new Date(clockInDate)
-    autoOut.setHours(23, 59, 59, 0)
-    autoOut.setDate(autoOut.getDate())
-    // Set timeout to midnight of that day
+    // Set clock-out to midnight of the clock-in day
     const midnight = new Date(clockInDate)
     midnight.setDate(midnight.getDate() + 1)
     midnight.setHours(0, 0, 0, 0)
 
+    // credited = 0: hours will NOT count toward totals until admin reviews
     await db.prepare(
-      `UPDATE time_entries SET clock_out = ?, auto_timeout = 1, updated_at = ? WHERE id = ?`
+      `UPDATE time_entries SET clock_out = ?, auto_timeout = 1, credited = 0, updated_at = ? WHERE id = ?`
     ).bind(midnight.toISOString(), now.toISOString(), entry.id).run()
 
     await auditLog(db, null, 'SYSTEM', 'AUTO_TIMEOUT', entry.account_id, entry.name,
-      `Missed clock-out auto-recorded at midnight for entry id ${entry.id}`)
+      `Missed clock-out auto-recorded at midnight for entry id ${entry.id}. Hours NOT credited — admin review required.`)
   }
 }
 
@@ -229,7 +220,6 @@ app.post('/api/punch/in', requireAuth, async (c) => {
   const payload = c.get('jwtPayload')
   await processAutoTimeouts(c.env.DB)
 
-  // Check not already clocked in
   const open = await c.env.DB.prepare(
     `SELECT id FROM time_entries WHERE account_id = ? AND clock_out IS NULL`
   ).bind(payload.sub).first()
@@ -281,8 +271,9 @@ app.get('/api/hours/my', requireAuth, async (c) => {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
 
+  // Fetch all completed entries including credited flag
   const entries = await c.env.DB.prepare(
-    `SELECT clock_in, clock_out FROM time_entries WHERE account_id = ? AND clock_out IS NOT NULL ORDER BY clock_in DESC`
+    `SELECT clock_in, clock_out, auto_timeout, credited FROM time_entries WHERE account_id = ? AND clock_out IS NOT NULL ORDER BY clock_in DESC`
   ).bind(payload.sub).all()
 
   function calcHours(entries: any[], from: Date, to: Date): number {
@@ -299,12 +290,14 @@ app.get('/api/hours/my', requireAuth, async (c) => {
   }
 
   const rows = entries.results as any[]
+  // Only count entries that are credited (credited = 1, i.e. not auto-timeout)
+  const creditedRows = rows.filter((e: any) => e.credited !== 0)
 
   return c.json({
-    today: calcHours(rows, todayStart, todayEnd),
-    week: calcHours(rows, weekStart, weekEnd),
-    month: calcHours(rows, monthStart, monthEnd),
-    entries: rows
+    today: calcHours(creditedRows, todayStart, todayEnd),
+    week: calcHours(creditedRows, weekStart, weekEnd),
+    month: calcHours(creditedRows, monthStart, monthEnd),
+    entries: rows  // Return ALL entries so history still shows auto-timeout rows (flagged)
   })
 })
 
@@ -465,8 +458,9 @@ app.get('/api/admin/hours', requireAdmin, async (c) => {
     `SELECT id, name, active FROM accounts WHERE role = 'crew' ORDER BY name ASC`
   ).all()
 
+  // Fetch credited flag so we can exclude auto-timeout entries from totals
   const allEntries = await c.env.DB.prepare(
-    `SELECT account_id, clock_in, clock_out FROM time_entries WHERE clock_out IS NOT NULL`
+    `SELECT account_id, clock_in, clock_out, auto_timeout, credited FROM time_entries WHERE clock_out IS NOT NULL`
   ).all()
 
   const entriesByAccount: Record<number, any[]> = {}
@@ -490,11 +484,13 @@ app.get('/api/admin/hours', requireAdmin, async (c) => {
 
   const summary = (accounts.results as any[]).map(a => {
     const entries = entriesByAccount[a.id] || []
+    // Only count credited entries in hour totals
+    const creditedEntries = entries.filter((e: any) => e.credited !== 0)
     return {
       id: a.id, name: a.name, active: a.active,
-      today: calcHours(entries, todayStart, todayEnd),
-      week: calcHours(entries, weekStart, weekEnd),
-      month: calcHours(entries, monthStart, monthEnd),
+      today: calcHours(creditedEntries, todayStart, todayEnd),
+      week: calcHours(creditedEntries, weekStart, weekEnd),
+      month: calcHours(creditedEntries, monthStart, monthEnd),
     }
   })
 
@@ -527,8 +523,9 @@ app.post('/api/admin/punch', requireAdmin, async (c) => {
   if (!account) return c.json({ error: 'Account not found' }, 404)
 
   const now = new Date().toISOString()
+  // Admin-inserted entries are always credited = 1
   const result = await c.env.DB.prepare(
-    `INSERT INTO time_entries (account_id, clock_in, clock_out, created_at, updated_at) VALUES (?,?,?,?,?)`
+    `INSERT INTO time_entries (account_id, clock_in, clock_out, credited, created_at, updated_at) VALUES (?,?,?,1,?,?)`
   ).bind(accountId, clockIn, clockOut || null, now, now).run()
 
   await auditLog(c.env.DB, payload.sub, payload.name, 'INSERT_PUNCH', accountId, account.name,

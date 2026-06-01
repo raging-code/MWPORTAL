@@ -4,38 +4,12 @@ import { ReactNode, useState } from 'react'
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 
 export function MangoWarriorLogo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
-  const sizes = { sm: 'w-8 h-8', md: 'w-12 h-12', lg: 'w-20 h-20' }
-  const textSizes = { sm: 'text-xs', md: 'text-base', lg: 'text-2xl' }
+  const sizes = { sm: 'w-8 h-8', md: 'w-12 h-12', lg: 'w-32 h-32' }
   return (
     <div className="flex items-center gap-2 sm:gap-3">
       <div className={`${sizes[size]} relative flex-shrink-0`}>
-        {/* 
-          LOGO: To use your own favicon/logo image instead of the SVG icon below,
-          replace the entire <svg>...</svg> with:
-          <img src="/favicon.svg" alt="Mango Warrior Logo" className="w-full h-full object-contain" />
-          (or favicon.png / favicon.ico depending on your file)
-        */}
-        <svg viewBox="0 0 80 80" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-          {/* Mango shape */}
-          <ellipse cx="30" cy="45" rx="18" ry="28" fill="#F5C518" opacity="0.95" />
-          <ellipse cx="30" cy="45" rx="14" ry="22" fill="#FBBF24" />
-          {/* Leaf */}
-          <ellipse cx="33" cy="18" rx="6" ry="10" fill="#1a5c2e" transform="rotate(-20 33 18)" />
-          {/* Warrior helmet */}
-          <path d="M48 20 Q65 15 72 30 Q75 45 65 55 Q58 60 50 58 L50 45 Q60 43 62 35 Q58 25 48 28Z" fill="#E63329" />
-          {/* Helmet crest */}
-          <path d="M55 20 Q58 8 65 5 Q70 10 68 18 Q62 16 58 22Z" fill="#E63329" />
-          {/* MW letters */}
-          <text x="20" y="54" fontFamily="Impact,Arial" fontSize="20" fontWeight="900" fill="white" opacity="0.9">M</text>
-          <text x="42" y="54" fontFamily="Impact,Arial" fontSize="20" fontWeight="900" fill="white" opacity="0.9">W</text>
-        </svg>
+        <img src="/logo.png" alt="Mango Warrior Logo" className="w-full h-full object-contain" />
       </div>
-      {size !== 'sm' && (
-        <div>
-          <div className={`font-display ${textSizes[size]} tracking-widest text-mango-500 leading-none`}>MANGO</div>
-          <div className={`font-display ${textSizes[size]} tracking-widest text-warrior-500 leading-none`}>WARRIOR</div>
-        </div>
-      )}
     </div>
   )
 }

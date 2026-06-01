@@ -207,6 +207,11 @@ function HoursTab({ onViewCrew }: { onViewCrew: (acc: any, entries: any[]) => vo
     }
   }
 
+  // ─── Totals across all crew ───────────────────────────────────────────────
+  const totalToday = summary.reduce((sum, s) => sum + s.today, 0)
+  const totalWeek  = summary.reduce((sum, s) => sum + s.week,  0)
+  const totalMonth = summary.reduce((sum, s) => sum + s.month, 0)
+
   if (loading) return <div className="flex justify-center py-20"><Spinner size={32} /></div>
 
   return (
@@ -226,38 +231,62 @@ function HoursTab({ onViewCrew }: { onViewCrew: (acc: any, entries: any[]) => vo
         {summary.length === 0 ? (
           <EmptyState message="No crew accounts yet" />
         ) : (
-          <div className="divide-y divide-light-200">
-            {summary.map(s => (
-              <button key={s.id} onClick={() => handleViewCrew(s)}
-                className="w-full flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 hover:bg-light-100 transition-colors text-left group">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0
-                    ${s.active ? 'bg-mango-500/15 text-mango-600' : 'bg-light-300 text-light-500'}`}>
-                    {s.name[0]}
+          <>
+            <div className="divide-y divide-light-200">
+              {summary.map(s => (
+                <button key={s.id} onClick={() => handleViewCrew(s)}
+                  className="w-full flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 hover:bg-light-100 transition-colors text-left group">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0
+                      ${s.active ? 'bg-mango-500/15 text-mango-600' : 'bg-light-300 text-light-500'}`}>
+                      {s.name[0]}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm group-hover:text-mango-600 transition-colors text-light-900 truncate">{s.name}</div>
+                      <div className="text-xs text-light-500">{s.active ? 'Active' : 'Deactivated'}</div>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <div className="font-medium text-sm group-hover:text-mango-600 transition-colors text-light-900 truncate">{s.name}</div>
-                    <div className="text-xs text-light-500">{s.active ? 'Active' : 'Deactivated'}</div>
+                  <div className="flex gap-3 sm:gap-4 text-right flex-shrink-0 ml-2">
+                    <div className="hidden md:block">
+                      <div className="text-xs text-light-500">Today</div>
+                      <div className="text-sm font-mono text-light-900">{formatHours(s.today)}</div>
+                    </div>
+                    <div className="hidden sm:block">
+                      <div className="text-xs text-light-500">Week</div>
+                      <div className="text-sm font-mono text-light-900">{formatHours(s.week)}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-light-500">Month</div>
+                      <div className="text-sm font-mono text-mango-600">{formatHours(s.month)}</div>
+                    </div>
+                    <ChevronDown size={16} className="text-light-400 self-center" />
                   </div>
+                </button>
+              ))}
+            </div>
+
+            {/* ── All-crew totals footer ── */}
+            <div className="border-t-2 border-mango-500/20 bg-mango-500/6 px-4 sm:px-5 py-3 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-light-700 uppercase tracking-wider flex-shrink-0">
+                <Clock size={13} className="text-mango-500" />
+                All Crew Total
+              </div>
+              <div className="flex gap-4 sm:gap-6 text-right">
+                <div className="hidden md:block">
+                  <div className="text-xs text-light-500">Today</div>
+                  <div className="text-sm font-mono font-bold text-light-900">{formatHours(totalToday)}</div>
                 </div>
-                <div className="flex gap-3 sm:gap-4 text-right flex-shrink-0 ml-2">
-                  <div className="hidden md:block">
-                    <div className="text-xs text-light-500">Today</div>
-                    <div className="text-sm font-mono text-light-900">{formatHours(s.today)}</div>
-                  </div>
-                  <div className="hidden sm:block">
-                    <div className="text-xs text-light-500">Week</div>
-                    <div className="text-sm font-mono text-light-900">{formatHours(s.week)}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-light-500">Month</div>
-                    <div className="text-sm font-mono text-mango-600">{formatHours(s.month)}</div>
-                  </div>
-                  <ChevronDown size={16} className="text-light-400 self-center" />
+                <div className="hidden sm:block">
+                  <div className="text-xs text-light-500">This Week</div>
+                  <div className="text-sm font-mono font-bold text-light-900">{formatHours(totalWeek)}</div>
                 </div>
-              </button>
-            ))}
-          </div>
+                <div>
+                  <div className="text-xs text-light-500">This Month</div>
+                  <div className="text-sm font-mono font-bold text-mango-600">{formatHours(totalMonth)}</div>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
 
@@ -448,45 +477,58 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
             {historyEntries.length === 0 ? (
               <EmptyState message={`No entries for this ${historyMode}`} />
             ) : (
-              <div className="overflow-x-auto max-h-96 overflow-y-auto">
-                <table className="data-table min-w-full">
-                  <thead>
-                    <tr>
-                      <th>Clock In</th><th>Clock Out</th><th>Duration</th>
-                      <th className="hidden sm:table-cell">Flags</th><th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {historyEntries.map(e => (
-                      <tr key={e.id}>
-                        <td className="font-mono text-xs text-green-700 whitespace-nowrap">{formatDateTime(e.clock_in)}</td>
-                        <td className="font-mono text-xs text-warrior-600 whitespace-nowrap">
-                          {e.clock_out ? formatDateTime(e.clock_out) : <span className="badge-green">Open</span>}
-                        </td>
-                        <td className="text-xs text-light-700 whitespace-nowrap">
-                          {e.clock_out ? formatHours(calcDuration(e.clock_in, e.clock_out)) : '—'}
-                        </td>
-                        <td className="hidden sm:table-cell">
-                          {e.auto_timeout ? <span className="badge-yellow">Auto-out</span> : null}
-                          {e.system_timeout ? <span className="badge-red">Sys-out</span> : null}
-                        </td>
-                        <td>
-                          <div className="flex items-center gap-1">
-                            <button onClick={() => setEditEntry(e)}
-                              className="p-1.5 rounded-lg hover:bg-light-200 text-light-500 hover:text-mango-600 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
-                              <Edit size={14} />
-                            </button>
-                            <button onClick={() => setDeleteEntry(e)}
-                              className="p-1.5 rounded-lg hover:bg-light-200 text-light-500 hover:text-warrior-500 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </td>
+              <>
+                <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                  <table className="data-table min-w-full">
+                    <thead>
+                      <tr>
+                        <th>Clock In</th><th>Clock Out</th><th>Duration</th>
+                        <th className="hidden sm:table-cell">Flags</th><th></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {historyEntries.map(e => (
+                        <tr key={e.id}>
+                          <td className="font-mono text-xs text-green-700 whitespace-nowrap">{formatDateTime(e.clock_in)}</td>
+                          <td className="font-mono text-xs text-warrior-600 whitespace-nowrap">
+                            {e.clock_out ? formatDateTime(e.clock_out) : <span className="badge-green">Open</span>}
+                          </td>
+                          <td className="text-xs text-light-700 whitespace-nowrap">
+                            {e.clock_out ? formatHours(calcDuration(e.clock_in, e.clock_out)) : '—'}
+                          </td>
+                          <td className="hidden sm:table-cell">
+                            {e.auto_timeout ? <span className="badge-yellow">Auto-out</span> : null}
+                            {e.system_timeout ? <span className="badge-red">Sys-out</span> : null}
+                          </td>
+                          <td>
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => setEditEntry(e)}
+                                className="p-1.5 rounded-lg hover:bg-light-200 text-light-500 hover:text-mango-600 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
+                                <Edit size={14} />
+                              </button>
+                              <button onClick={() => setDeleteEntry(e)}
+                                className="p-1.5 rounded-lg hover:bg-light-200 text-light-500 hover:text-warrior-500 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* ── Total Hours Footer ── */}
+                <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-mango-500/6 border-t-2 border-mango-500/20">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-light-700 uppercase tracking-wider">
+                    <Clock size={13} className="text-mango-500" />
+                    Total {historyMode === 'day' ? 'Day' : historyMode === 'week' ? 'Week' : 'Month'} Hours
+                  </div>
+                  <div className="font-mono font-bold text-base text-mango-600">
+                    {formatHours(historyHours)}
+                  </div>
+                </div>
+              </>
             )}
           </>
         )}

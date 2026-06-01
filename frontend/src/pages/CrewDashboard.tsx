@@ -352,31 +352,44 @@ export default function CrewDashboard() {
                 {historyEntries.length === 0 ? (
                   <EmptyState message={`No entries for this ${historyMode}`} />
                 ) : (
-                  <div className="max-h-72 overflow-y-auto overflow-x-auto">
-                    <table className="data-table min-w-full">
-                      <thead>
-                        <tr>
-                          <th>Clock In</th>
-                          <th>Clock Out</th>
-                          <th className="text-right">Duration</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {historyEntries.map((e: any) => (
-                          <tr key={e.id}>
-                            <td className="font-mono text-xs text-green-700 whitespace-nowrap">{formatDateTime(e.clock_in)}</td>
-                            <td className="font-mono text-xs text-warrior-600 whitespace-nowrap">
-                              {e.clock_out ? formatDateTime(e.clock_out) : <span className="badge-green">Active</span>}
-                              {e.auto_timeout && <span className="ml-1 badge-yellow">Auto</span>}
-                            </td>
-                            <td className="text-right text-xs text-light-700">
-                              {e.clock_out ? formatHours(calcDuration(e.clock_in, e.clock_out)) : '—'}
-                            </td>
+                  <>
+                    <div className="max-h-72 overflow-y-auto overflow-x-auto">
+                      <table className="data-table min-w-full">
+                        <thead>
+                          <tr>
+                            <th>Clock In</th>
+                            <th>Clock Out</th>
+                            <th className="text-right">Duration</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {historyEntries.map((e: any) => (
+                            <tr key={e.id}>
+                              <td className="font-mono text-xs text-green-700 whitespace-nowrap">{formatDateTime(e.clock_in)}</td>
+                              <td className="font-mono text-xs text-warrior-600 whitespace-nowrap">
+                                {e.clock_out ? formatDateTime(e.clock_out) : <span className="badge-green">Active</span>}
+                                {e.auto_timeout && <span className="ml-1 badge-yellow">Auto</span>}
+                              </td>
+                              <td className="text-right text-xs text-light-700">
+                                {e.clock_out ? formatHours(calcDuration(e.clock_in, e.clock_out)) : '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* ── Total Hours Footer ── */}
+                    <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-mango-500/6 border-t-2 border-mango-500/20">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-light-700 uppercase tracking-wider">
+                        <Clock size={13} className="text-mango-500" />
+                        Total {historyMode === 'day' ? 'Day' : historyMode === 'week' ? 'Week' : 'Month'} Hours
+                      </div>
+                      <div className="font-mono font-bold text-base text-mango-600">
+                        {formatHours(historyHours)}
+                      </div>
+                    </div>
+                  </>
                 )}
               </>
             )}
