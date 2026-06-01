@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { LogOut, Clock, Download, ChevronDown, ChevronUp, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { api, getUser, clearToken } from '../lib/api'
 import { formatHours, formatDateTime, calcDuration, exportToXLSX } from '../lib/utils'
-import { MangoWarriorLogo, StatCard, EmptyState, ToastContainer, toast, Spinner, ConfirmModal } from '../components/ui'
+import { MangoWarriorLogo, HoursWidget, EmptyState, ToastContainer, toast, Spinner, ConfirmModal } from '../components/ui'
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -207,11 +207,11 @@ export default function CrewDashboard() {
         <div className="card p-4 sm:p-5">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <div className="text-light-500 text-xs uppercase tracking-widest">Welcome back</div>
-              <h1 className="font-display text-2xl sm:text-3xl tracking-wider mt-1 text-light-900">{user.name}</h1>
+              <div className="text-xs font-semibold text-light-500 uppercase tracking-widest">Welcome back</div>
+              <h1 className="text-2xl sm:text-3xl font-bold mt-1 text-light-900 tracking-tight">{user.name}</h1>
             </div>
             <div className="text-right">
-              <div className="font-mono text-lg sm:text-2xl text-mango-500">
+              <div className="font-mono text-lg sm:text-2xl font-medium text-mango-500">
                 {now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </div>
               <div className="text-xs text-light-500">
@@ -224,7 +224,7 @@ export default function CrewDashboard() {
           <div className={`flex items-center gap-2 text-sm font-medium mb-5 sm:mb-6 ${clockedIn ? 'text-green-600' : 'text-light-500'}`}>
             <div className={`w-2 h-2 rounded-full ${clockedIn ? 'bg-green-500 animate-pulse' : 'bg-light-400'}`} />
             {clockedIn
-              ? <span>Clocked in · {formatHours(elapsed)} elapsed</span>
+              ? <span>Clocked in · <span className="font-mono">{formatHours(elapsed)}</span> elapsed</span>
               : 'Currently clocked out'}
           </div>
 
@@ -274,13 +274,16 @@ export default function CrewDashboard() {
           )}
         </div>
 
-        {/* Stats with date labels */}
+        {/* Hours Summary — single combined widget */}
         {hours && (
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
-            <StatCard label="Today" value={formatHours(hours.today)} sub={todayLabel} />
-            <StatCard label="This Week" value={formatHours(hours.week)} sub={weekLabel} />
-            <StatCard label="This Month" value={formatHours(hours.month)} sub={monthLabel} />
-          </div>
+          <HoursWidget
+            todayValue={formatHours(hours.today)}
+            todaySub={todayLabel}
+            weekValue={formatHours(hours.week)}
+            weekSub={weekLabel}
+            monthValue={formatHours(hours.month)}
+            monthSub={monthLabel}
+          />
         )}
 
         {/* Work Hours History */}
@@ -370,7 +373,7 @@ export default function CrewDashboard() {
                                 {e.clock_out ? formatDateTime(e.clock_out) : <span className="badge-green">Active</span>}
                                 {e.auto_timeout && <span className="ml-1 badge-yellow">Auto</span>}
                               </td>
-                              <td className="text-right text-xs text-light-700">
+                              <td className="text-right text-xs font-mono text-light-700">
                                 {e.clock_out ? formatHours(calcDuration(e.clock_in, e.clock_out)) : '—'}
                               </td>
                             </tr>
@@ -379,13 +382,13 @@ export default function CrewDashboard() {
                       </table>
                     </div>
 
-                    {/* ── Total Hours Footer ── */}
+                    {/* Total Hours Footer */}
                     <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-mango-500/6 border-t-2 border-mango-500/20">
                       <div className="flex items-center gap-1.5 text-xs font-semibold text-light-700 uppercase tracking-wider">
                         <Clock size={13} className="text-mango-500" />
                         Total {historyMode === 'day' ? 'Day' : historyMode === 'week' ? 'Week' : 'Month'} Hours
                       </div>
-                      <div className="font-mono font-bold text-base text-mango-600">
+                      <div className="font-mono font-semibold text-base text-mango-600">
                         {formatHours(historyHours)}
                       </div>
                     </div>

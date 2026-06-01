@@ -55,9 +55,12 @@ export default {
         }
       },
       fontFamily: {
-        display: ['"Barlow Condensed"', 'Impact', 'sans-serif'],
-        sans:    ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-        mono:    ['"JetBrains Mono"', 'monospace'],
+        // DM Sans: clean, modern, highly readable — used for ALL UI text
+        sans:    ['"DM Sans"', 'system-ui', 'sans-serif'],
+        // DM Mono: for timestamps, hour values, numeric data
+        mono:    ['"DM Mono"', '"JetBrains Mono"', 'monospace'],
+        // Display alias maps to sans (DM Sans handles headings too)
+        display: ['"DM Sans"', 'system-ui', 'sans-serif'],
       },
       screens: {
         'xs': '375px',

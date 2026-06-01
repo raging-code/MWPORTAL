@@ -8,7 +8,7 @@ import {
 import { api, getUser, clearToken } from '../lib/api'
 import { formatHours, formatDateTime, calcDuration, exportToXLSX } from '../lib/utils'
 import {
-  MangoWarriorLogo, StatCard, EmptyState, ToastContainer, toast,
+  MangoWarriorLogo, HoursWidget, EmptyState, ToastContainer, toast,
   Spinner, Modal, ConfirmModal
 } from '../components/ui'
 
@@ -242,7 +242,7 @@ function HoursTab({ onViewCrew }: { onViewCrew: (acc: any, entries: any[]) => vo
                       {s.name[0]}
                     </div>
                     <div className="min-w-0">
-                      <div className="font-medium text-sm group-hover:text-mango-600 transition-colors text-light-900 truncate">{s.name}</div>
+                      <div className="font-semibold text-sm group-hover:text-mango-600 transition-colors text-light-900 truncate">{s.name}</div>
                       <div className="text-xs text-light-500">{s.active ? 'Active' : 'Deactivated'}</div>
                     </div>
                   </div>
@@ -391,19 +391,22 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
           <ArrowLeft size={15} />Back
         </button>
         <div className="min-w-0">
-          <h2 className="font-display text-xl sm:text-2xl tracking-wider text-light-900">{account.name}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-light-900">{account.name}</h2>
           <div className={account.active ? 'badge-green' : 'badge-red'}>
             {account.active ? 'Active' : 'Deactivated'}
           </div>
         </div>
       </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <StatCard label="Today" value={formatHours(calcH(todayStart, todayEnd))} sub={todayLabel} />
-        <StatCard label="This Week" value={formatHours(calcH(weekStart, weekEnd))} sub={weekLabel} />
-        <StatCard label="This Month" value={formatHours(calcH(monthStart, monthEnd))} sub={monthLabel} />
-      </div>
+      {/* Hours summary — single combined widget */}
+      <HoursWidget
+        todayValue={formatHours(calcH(todayStart, todayEnd))}
+        todaySub={todayLabel}
+        weekValue={formatHours(calcH(weekStart, weekEnd))}
+        weekSub={weekLabel}
+        monthValue={formatHours(calcH(monthStart, monthEnd))}
+        monthSub={monthLabel}
+      />
 
       {/* Work Hours History */}
       <div className="card overflow-hidden">
@@ -493,7 +496,7 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
                           <td className="font-mono text-xs text-warrior-600 whitespace-nowrap">
                             {e.clock_out ? formatDateTime(e.clock_out) : <span className="badge-green">Open</span>}
                           </td>
-                          <td className="text-xs text-light-700 whitespace-nowrap">
+                          <td className="font-mono text-xs text-light-700 whitespace-nowrap">
                             {e.clock_out ? formatHours(calcDuration(e.clock_in, e.clock_out)) : '—'}
                           </td>
                           <td className="hidden sm:table-cell">
@@ -518,13 +521,13 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
                   </table>
                 </div>
 
-                {/* ── Total Hours Footer ── */}
+                {/* Total Hours Footer */}
                 <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-mango-500/6 border-t-2 border-mango-500/20">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-light-700 uppercase tracking-wider">
                     <Clock size={13} className="text-mango-500" />
                     Total {historyMode === 'day' ? 'Day' : historyMode === 'week' ? 'Week' : 'Month'} Hours
                   </div>
-                  <div className="font-mono font-bold text-base text-mango-600">
+                  <div className="font-mono font-semibold text-base text-mango-600">
                     {formatHours(historyHours)}
                   </div>
                 </div>
@@ -589,7 +592,7 @@ function AddPunchModal({ accountId, onClose, onSuccess }: { accountId: number; o
           <input type="datetime-local" className="input" value={clockIn} onChange={e => setClockIn(e.target.value)} />
         </div>
         <div>
-          <label className="label">Clock Out <span className="text-light-500 font-normal">(optional)</span></label>
+          <label className="label">Clock Out <span className="text-light-500 font-normal normal-case">(optional)</span></label>
           <input type="datetime-local" className="input" value={clockOut} onChange={e => setClockOut(e.target.value)} />
         </div>
         <div className="flex gap-3 justify-end">
@@ -698,7 +701,7 @@ function AccountsTab() {
                       {acc.name[0]}
                     </div>
                     <div className="min-w-0">
-                      <div className="font-medium text-sm text-light-900 truncate">{acc.name}</div>
+                      <div className="font-semibold text-sm text-light-900 truncate">{acc.name}</div>
                       <div className="text-xs text-light-500">{acc.role} · {acc.active ? 'Active' : 'Inactive'}</div>
                     </div>
                   </div>
@@ -770,7 +773,7 @@ function CreateAccountModal({ onClose, onSuccess }: { onClose: () => void; onSuc
           <input className="input" placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
         </div>
         <div>
-          <label className="label">Initial PIN <span className="text-light-500 font-normal">(min. 4 digits)</span></label>
+          <label className="label">Initial PIN <span className="text-light-500 font-normal normal-case">(min. 4 digits)</span></label>
           <input className="input" type="text" inputMode="numeric" placeholder="PIN" value={pin} onChange={e => setPin(e.target.value)} />
         </div>
         <div>
@@ -914,7 +917,7 @@ function AuditTab() {
                 <tr key={log.id}>
                   <td className="font-mono text-xs text-light-600 whitespace-nowrap">{formatDateTime(log.created_at)}</td>
                   <td><span className={actionColors[log.action] || 'badge-gray'}>{log.action.replace(/_/g, ' ')}</span></td>
-                  <td className="text-xs text-mango-600">{log.actor_name}</td>
+                  <td className="text-xs text-mango-600 font-semibold">{log.actor_name}</td>
                   <td className="text-xs text-light-600 hidden sm:table-cell">{log.target_name || '—'}</td>
                   <td className="text-xs text-light-500 max-w-xs truncate hidden md:table-cell">{log.details}</td>
                 </tr>
