@@ -7,8 +7,14 @@ export function MangoWarriorLogo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' })
   const sizes = { sm: 'w-8 h-8', md: 'w-12 h-12', lg: 'w-20 h-20' }
   const textSizes = { sm: 'text-xs', md: 'text-base', lg: 'text-2xl' }
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2 sm:gap-3">
       <div className={`${sizes[size]} relative flex-shrink-0`}>
+        {/* 
+          LOGO: To use your own favicon/logo image instead of the SVG icon below,
+          replace the entire <svg>...</svg> with:
+          <img src="/favicon.svg" alt="Mango Warrior Logo" className="w-full h-full object-contain" />
+          (or favicon.png / favicon.ico depending on your file)
+        */}
         <svg viewBox="0 0 80 80" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Mango shape */}
           <ellipse cx="30" cy="45" rx="18" ry="28" fill="#F5C518" opacity="0.95" />
@@ -39,14 +45,17 @@ export function MangoWarriorLogo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' })
 export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="card w-full max-w-md animate-scale-in">
-        <div className="flex items-center justify-between p-5 border-b border-dark-500">
-          <h2 className="font-semibold text-lg">{title}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-dark-500">
+      <div className="card w-full max-w-md animate-scale-in mx-3 sm:mx-0">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-light-300">
+          <h2 className="font-semibold text-base sm:text-lg text-light-900">{title}</h2>
+          <button
+            onClick={onClose}
+            className="text-light-600 hover:text-light-900 transition-colors p-1.5 rounded-lg hover:bg-light-200 min-w-[36px] min-h-[36px] flex items-center justify-center"
+          >
             <X size={20} />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-4 sm:p-5">{children}</div>
       </div>
     </div>
   )
@@ -73,14 +82,18 @@ export function ToastContainer() {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== item.id)), 3500)
   }]
 
-  const icons = { success: <CheckCircle size={16} className="text-green-400 flex-shrink-0" />, error: <AlertTriangle size={16} className="text-warrior-400 flex-shrink-0" />, info: <Loader2 size={16} className="text-mango-500 flex-shrink-0" /> }
+  const icons = {
+    success: <CheckCircle size={16} className="text-green-600 flex-shrink-0" />,
+    error: <AlertTriangle size={16} className="text-warrior-500 flex-shrink-0" />,
+    info: <Loader2 size={16} className="text-mango-500 flex-shrink-0" />
+  }
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[100] flex flex-col gap-2 max-w-[calc(100vw-2rem)] sm:max-w-sm">
       {toasts.map(t => (
-        <div key={t.id} className="card px-4 py-3 flex items-center gap-3 min-w-[260px] max-w-sm shadow-xl animate-slide-up">
+        <div key={t.id} className="card px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-3 min-w-[220px] sm:min-w-[260px] shadow-lg animate-slide-up">
           {icons[t.type]}
-          <span className="text-sm font-medium">{t.msg}</span>
+          <span className="text-sm font-medium text-light-900">{t.msg}</span>
         </div>
       ))}
     </div>
@@ -97,10 +110,10 @@ export function Spinner({ size = 20 }: { size?: number }) {
 
 export function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="card p-5">
-      <div className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">{label}</div>
-      <div className="text-3xl font-display tracking-wider text-mango-500">{value}</div>
-      {sub && <div className="text-xs text-gray-500 mt-1">{sub}</div>}
+    <div className="card p-3 sm:p-5">
+      <div className="text-xs font-semibold text-light-600 uppercase tracking-widest mb-1 sm:mb-2 truncate">{label}</div>
+      <div className="text-2xl sm:text-3xl font-display tracking-wider text-mango-500">{value}</div>
+      {sub && <div className="text-xs text-light-600 mt-1 truncate hidden sm:block">{sub}</div>}
     </div>
   )
 }
@@ -109,8 +122,8 @@ export function StatCard({ label, value, sub }: { label: string; value: string; 
 
 export function EmptyState({ message }: { message: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-gray-600">
-      <div className="text-5xl mb-3">📋</div>
+    <div className="flex flex-col items-center justify-center py-12 sm:py-16 text-light-500">
+      <div className="text-4xl sm:text-5xl mb-3">📋</div>
       <div className="text-sm">{message}</div>
     </div>
   )
@@ -122,7 +135,7 @@ export function ConfirmModal({ title, message, onConfirm, onCancel, danger = fal
   { title: string; message: string; onConfirm: () => void; onCancel: () => void; danger?: boolean }) {
   return (
     <Modal title={title} onClose={onCancel}>
-      <p className="text-gray-400 text-sm mb-6">{message}</p>
+      <p className="text-light-700 text-sm mb-5 sm:mb-6">{message}</p>
       <div className="flex gap-3 justify-end">
         <button className="btn-ghost" onClick={onCancel}>Cancel</button>
         <button className={danger ? 'btn-danger' : 'btn-primary'} onClick={onConfirm}>Confirm</button>

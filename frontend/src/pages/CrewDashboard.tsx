@@ -77,12 +77,10 @@ export default function CrewDashboard() {
   const [exporting, setExporting] = useState(false)
   const [now, setNow] = useState(new Date())
 
-  // Confirm modal state
   const [confirmAction, setConfirmAction] = useState<'in' | 'out' | null>(null)
 
-  // History view state
   const [historyMode, setHistoryMode] = useState<'day' | 'week' | 'month'>('day')
-  const [historyOffset, setHistoryOffset] = useState(0) // 0 = current, -1 = prev, +1 = future (disabled)
+  const [historyOffset, setHistoryOffset] = useState(0)
 
   const refresh = useCallback(async () => {
     try {
@@ -96,7 +94,6 @@ export default function CrewDashboard() {
 
   useEffect(() => { refresh() }, [refresh])
 
-  // Live clock
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(t)
@@ -190,14 +187,14 @@ export default function CrewDashboard() {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-dark-900 page-enter">
+    <div className="min-h-screen bg-light-100 page-enter">
       {/* Header */}
-      <header className="bg-dark-800 border-b border-dark-600 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+      <header className="bg-white border-b border-light-300 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-2xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between">
           <MangoWarriorLogo size="sm" />
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-400 hidden sm:block">{user.name}</span>
-            <button onClick={logout} className="btn-ghost !py-1.5 !px-3 flex items-center gap-1.5 text-sm">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-sm text-light-600 hidden sm:block truncate max-w-[160px]">{user.name}</span>
+            <button onClick={logout} className="btn-ghost !py-1.5 !px-2.5 sm:!px-3 flex items-center gap-1.5 text-sm">
               <LogOut size={15} />
               <span className="hidden sm:inline">Logout</span>
             </button>
@@ -205,27 +202,27 @@ export default function CrewDashboard() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-5">
         {/* Welcome + Clock */}
-        <div className="card p-5">
+        <div className="card p-4 sm:p-5">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <div className="text-gray-500 text-xs uppercase tracking-widest">Welcome back</div>
-              <h1 className="font-display text-3xl tracking-wider mt-1">{user.name}</h1>
+              <div className="text-light-500 text-xs uppercase tracking-widest">Welcome back</div>
+              <h1 className="font-display text-2xl sm:text-3xl tracking-wider mt-1 text-light-900">{user.name}</h1>
             </div>
             <div className="text-right">
-              <div className="font-mono text-2xl text-mango-500">
+              <div className="font-mono text-lg sm:text-2xl text-mango-500">
                 {now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </div>
-              <div className="text-xs text-gray-500">
-                {now.toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric' })}
+              <div className="text-xs text-light-500">
+                {now.toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' })}
               </div>
             </div>
           </div>
 
           {/* Status indicator */}
-          <div className={`flex items-center gap-2 text-sm font-medium mb-6 ${clockedIn ? 'text-green-400' : 'text-gray-500'}`}>
-            <div className={`w-2 h-2 rounded-full ${clockedIn ? 'bg-green-400 animate-pulse' : 'bg-gray-600'}`} />
+          <div className={`flex items-center gap-2 text-sm font-medium mb-5 sm:mb-6 ${clockedIn ? 'text-green-600' : 'text-light-500'}`}>
+            <div className={`w-2 h-2 rounded-full ${clockedIn ? 'bg-green-500 animate-pulse' : 'bg-light-400'}`} />
             {clockedIn
               ? <span>Clocked in · {formatHours(elapsed)} elapsed</span>
               : 'Currently clocked out'}
@@ -235,17 +232,17 @@ export default function CrewDashboard() {
           {status === null ? (
             <div className="flex justify-center py-4"><Spinner size={28} /></div>
           ) : (
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={requestPunch}
                 disabled={punching || clockedIn}
-                className={`flex-1 relative py-5 rounded-2xl font-semibold text-lg transition-all duration-200 active:scale-95
+                className={`flex-1 relative py-4 sm:py-5 rounded-2xl font-semibold text-base sm:text-lg transition-all duration-200 active:scale-95
                   ${!clockedIn
-                    ? 'bg-green-500 hover:bg-green-400 text-white glow-green'
-                    : 'bg-dark-600 text-gray-600 cursor-not-allowed'}`}
+                    ? 'bg-green-500 hover:bg-green-600 text-white glow-green'
+                    : 'bg-light-200 text-light-400 cursor-not-allowed border border-light-300'}`}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <CheckCircle size={22} />
+                  <CheckCircle size={20} />
                   <span>Time In</span>
                 </div>
                 {punching && !clockedIn && (
@@ -258,13 +255,13 @@ export default function CrewDashboard() {
               <button
                 onClick={requestPunch}
                 disabled={punching || !clockedIn}
-                className={`flex-1 relative py-5 rounded-2xl font-semibold text-lg transition-all duration-200 active:scale-95
+                className={`flex-1 relative py-4 sm:py-5 rounded-2xl font-semibold text-base sm:text-lg transition-all duration-200 active:scale-95
                   ${clockedIn
                     ? 'bg-warrior-500 hover:bg-warrior-600 text-white glow-warrior'
-                    : 'bg-dark-600 text-gray-600 cursor-not-allowed'}`}
+                    : 'bg-light-200 text-light-400 cursor-not-allowed border border-light-300'}`}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <XCircle size={22} />
+                  <XCircle size={20} />
                   <span>Time Out</span>
                 </div>
                 {punching && clockedIn && (
@@ -279,7 +276,7 @@ export default function CrewDashboard() {
 
         {/* Stats with date labels */}
         {hours && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             <StatCard label="Today" value={formatHours(hours.today)} sub={todayLabel} />
             <StatCard label="This Week" value={formatHours(hours.week)} sub={weekLabel} />
             <StatCard label="This Month" value={formatHours(hours.month)} sub={monthLabel} />
@@ -292,28 +289,30 @@ export default function CrewDashboard() {
             {/* Section Header */}
             <button
               onClick={() => setShowEntries(!showEntries)}
-              className="w-full flex items-center justify-between px-5 py-4 hover:bg-dark-600/50 transition-colors"
+              className="w-full flex items-center justify-between px-4 sm:px-5 py-4 hover:bg-light-100 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <Clock size={16} className="text-mango-500" />
-                <span className="font-semibold text-sm">Work Hours History</span>
+                <span className="font-semibold text-sm text-light-900">Work Hours History</span>
               </div>
-              {showEntries ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
+              {showEntries
+                ? <ChevronUp size={16} className="text-light-500" />
+                : <ChevronDown size={16} className="text-light-500" />}
             </button>
 
             {showEntries && (
               <>
                 {/* Mode Tabs */}
-                <div className="px-5 pb-3 border-b border-dark-600">
-                  <div className="flex gap-1 bg-dark-800 p-1 rounded-xl w-fit">
+                <div className="px-4 sm:px-5 pb-3 border-b border-light-300">
+                  <div className="flex gap-1 bg-light-200 p-1 rounded-xl w-fit">
                     {(['day', 'week', 'month'] as const).map(m => (
                       <button
                         key={m}
                         onClick={() => { setHistoryMode(m); setHistoryOffset(0) }}
-                        className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize
+                        className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize
                           ${historyMode === m
-                            ? 'bg-mango-500 text-dark-900'
-                            : 'text-gray-500 hover:text-white'}`}
+                            ? 'bg-mango-500 text-white shadow-sm'
+                            : 'text-light-600 hover:text-light-900'}`}
                       >
                         {m}
                       </button>
@@ -322,20 +321,20 @@ export default function CrewDashboard() {
                 </div>
 
                 {/* Navigation */}
-                <div className="flex items-center justify-between px-5 py-3 bg-dark-800/50 border-b border-dark-600">
+                <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-light-100 border-b border-light-300">
                   <button
                     onClick={() => setHistoryOffset(o => o - 1)}
-                    className="p-1.5 rounded-lg hover:bg-dark-500 text-gray-400 hover:text-white transition-colors"
+                    className="p-2 rounded-lg hover:bg-light-300 text-light-600 hover:text-light-900 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
                   >
                     <ChevronLeft size={16} />
                   </button>
 
-                  <div className="text-center">
-                    <div className="text-sm font-semibold text-white">{historyWindow.label}</div>
-                    <div className="text-xs text-mango-500 font-mono mt-0.5">
+                  <div className="text-center flex-1 px-2">
+                    <div className="text-sm font-semibold text-light-900 truncate">{historyWindow.label}</div>
+                    <div className="text-xs text-mango-600 font-mono mt-0.5">
                       {formatHours(historyHours)} total
                       {historyOffset === 0 && (
-                        <span className="ml-2 text-gray-600">· current</span>
+                        <span className="ml-2 text-light-400">· current</span>
                       )}
                     </div>
                   </div>
@@ -343,7 +342,7 @@ export default function CrewDashboard() {
                   <button
                     onClick={() => setHistoryOffset(o => o + 1)}
                     disabled={historyOffset >= 0}
-                    className="p-1.5 rounded-lg hover:bg-dark-500 text-gray-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="p-2 rounded-lg hover:bg-light-300 text-light-600 hover:text-light-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed min-w-[36px] min-h-[36px] flex items-center justify-center"
                   >
                     <ChevronRight size={16} />
                   </button>
@@ -353,8 +352,8 @@ export default function CrewDashboard() {
                 {historyEntries.length === 0 ? (
                   <EmptyState message={`No entries for this ${historyMode}`} />
                 ) : (
-                  <div className="max-h-72 overflow-y-auto">
-                    <table className="data-table">
+                  <div className="max-h-72 overflow-y-auto overflow-x-auto">
+                    <table className="data-table min-w-full">
                       <thead>
                         <tr>
                           <th>Clock In</th>
@@ -365,12 +364,12 @@ export default function CrewDashboard() {
                       <tbody>
                         {historyEntries.map((e: any) => (
                           <tr key={e.id}>
-                            <td className="font-mono text-xs text-green-400">{formatDateTime(e.clock_in)}</td>
-                            <td className="font-mono text-xs text-warrior-400">
+                            <td className="font-mono text-xs text-green-700 whitespace-nowrap">{formatDateTime(e.clock_in)}</td>
+                            <td className="font-mono text-xs text-warrior-600 whitespace-nowrap">
                               {e.clock_out ? formatDateTime(e.clock_out) : <span className="badge-green">Active</span>}
                               {e.auto_timeout && <span className="ml-1 badge-yellow">Auto</span>}
                             </td>
-                            <td className="text-right text-xs text-gray-400">
+                            <td className="text-right text-xs text-light-700">
                               {e.clock_out ? formatHours(calcDuration(e.clock_in, e.clock_out)) : '—'}
                             </td>
                           </tr>
@@ -385,12 +384,12 @@ export default function CrewDashboard() {
         )}
 
         {/* Export */}
-        <div className="card p-5">
+        <div className="card p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-4">
             <Download size={16} className="text-mango-500" />
-            <h2 className="font-semibold text-sm">Export Hours to Excel</h2>
+            <h2 className="font-semibold text-sm text-light-900">Export Hours to Excel</h2>
           </div>
-          <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 mb-3">
             <div>
               <label className="label">Start Date</label>
               <input type="date" className="input" value={exportStart} onChange={e => setExportStart(e.target.value)} />

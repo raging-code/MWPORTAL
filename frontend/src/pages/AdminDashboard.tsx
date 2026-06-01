@@ -15,7 +15,7 @@ import {
 type Tab = 'crew' | 'accounts' | 'audit'
 type SubView = null | { type: 'crew-detail'; account: any; entries: any[] }
 
-// ─── Date helpers (shared with CrewDashboard) ─────────────────────────────────
+// ─── Date helpers ─────────────────────────────────────────────────────────────
 
 function getWeekBounds(date: Date): { start: Date; end: Date } {
   const d = new Date(date)
@@ -89,35 +89,35 @@ export default function AdminDashboard() {
   function logout() { clearToken(); navigate('/login') }
 
   const tabCls = (t: Tab) =>
-    `flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all duration-150 ${tab === t
-      ? 'bg-mango-500/15 text-mango-500'
-      : 'text-gray-500 hover:text-white hover:bg-dark-600'}`
+    `flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 ${tab === t
+      ? 'bg-mango-500/12 text-mango-600 border border-mango-500/20'
+      : 'text-light-600 hover:text-light-900 hover:bg-light-200'}`
 
   return (
-    <div className="min-h-screen bg-dark-900 page-enter">
+    <div className="min-h-screen bg-light-100 page-enter">
       {/* Header */}
-      <header className="bg-dark-800 border-b border-dark-600 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <header className="bg-white border-b border-light-300 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
             <MangoWarriorLogo size="sm" />
-            <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg bg-warrior-500/10 border border-warrior-500/20">
-              <Shield size={12} className="text-warrior-400" />
-              <span className="text-xs text-warrior-400 font-semibold">Admin</span>
+            <div className="hidden xs:flex items-center gap-1 px-2 py-1 rounded-lg bg-warrior-500/8 border border-warrior-500/20">
+              <Shield size={12} className="text-warrior-500" />
+              <span className="text-xs text-warrior-600 font-semibold">Admin</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="text-right hidden sm:block">
-              <div className="font-mono text-sm text-mango-500">{now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</div>
-              <div className="text-xs text-gray-600">{user.name}</div>
+              <div className="font-mono text-sm text-mango-600">{now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</div>
+              <div className="text-xs text-light-500 truncate max-w-[120px]">{user.name}</div>
             </div>
-            <button onClick={logout} className="btn-ghost !py-1.5 !px-3 flex items-center gap-1.5 text-sm">
+            <button onClick={logout} className="btn-ghost !py-1.5 !px-2.5 sm:!px-3 flex items-center gap-1.5 text-sm">
               <LogOut size={15} /><span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-5">
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-5">
         {subView ? (
           <CrewDetailView
             account={subView.account}
@@ -131,15 +131,15 @@ export default function AdminDashboard() {
         ) : (
           <>
             {/* Tabs */}
-            <div className="flex gap-1 mb-5 bg-dark-800 p-1.5 rounded-2xl border border-dark-600 w-fit">
+            <div className="flex gap-1 mb-4 sm:mb-5 bg-light-200 p-1 sm:p-1.5 rounded-2xl border border-light-300 w-fit">
               <button className={tabCls('crew')} onClick={() => setTab('crew')}>
-                <Clock size={15} /><span>Hours</span>
+                <Clock size={14} /><span>Hours</span>
               </button>
               <button className={tabCls('accounts')} onClick={() => setTab('accounts')}>
-                <Users size={15} /><span>Accounts</span>
+                <Users size={14} /><span>Accounts</span>
               </button>
               <button className={tabCls('audit')} onClick={() => setTab('audit')}>
-                <ClipboardList size={15} /><span>Audit Log</span>
+                <ClipboardList size={14} /><span className="hidden xs:inline">Audit Log</span><span className="xs:hidden">Audit</span>
               </button>
             </div>
 
@@ -210,50 +210,50 @@ function HoursTab({ onViewCrew }: { onViewCrew: (acc: any, entries: any[]) => vo
   if (loading) return <div className="flex justify-center py-20"><Spinner size={32} /></div>
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       {/* Crew Cards */}
       <div className="card overflow-hidden">
-        <div className="px-5 py-4 border-b border-dark-600 flex items-center justify-between">
+        <div className="px-4 sm:px-5 py-4 border-b border-light-300 flex items-center justify-between">
           <div>
-            <h2 className="font-semibold">Crew Work Hours</h2>
-            <div className="text-xs text-gray-500 mt-0.5">
+            <h2 className="font-semibold text-light-900">Crew Work Hours</h2>
+            <div className="text-xs text-light-500 mt-0.5 hidden sm:block">
               Today: {todayLabel} · Week: {weekLabel} · Month: {monthLabel}
             </div>
           </div>
-          <button onClick={load} className="text-xs text-gray-500 hover:text-mango-500 transition-colors">Refresh</button>
+          <button onClick={load} className="text-xs text-light-500 hover:text-mango-600 transition-colors px-2 py-1 rounded-lg hover:bg-light-200">Refresh</button>
         </div>
 
         {summary.length === 0 ? (
           <EmptyState message="No crew accounts yet" />
         ) : (
-          <div className="divide-y divide-dark-600">
+          <div className="divide-y divide-light-200">
             {summary.map(s => (
               <button key={s.id} onClick={() => handleViewCrew(s)}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-dark-600/50 transition-colors text-left group">
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
-                    ${s.active ? 'bg-mango-500/20 text-mango-500' : 'bg-dark-500 text-gray-600'}`}>
+                className="w-full flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 hover:bg-light-100 transition-colors text-left group">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0
+                    ${s.active ? 'bg-mango-500/15 text-mango-600' : 'bg-light-300 text-light-500'}`}>
                     {s.name[0]}
                   </div>
-                  <div>
-                    <div className="font-medium text-sm group-hover:text-mango-500 transition-colors">{s.name}</div>
-                    <div className="text-xs text-gray-500">{s.active ? 'Active' : 'Deactivated'}</div>
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm group-hover:text-mango-600 transition-colors text-light-900 truncate">{s.name}</div>
+                    <div className="text-xs text-light-500">{s.active ? 'Active' : 'Deactivated'}</div>
                   </div>
                 </div>
-                <div className="flex gap-4 text-right">
-                  <div className="hidden sm:block">
-                    <div className="text-xs text-gray-600">Today</div>
-                    <div className="text-sm font-mono text-white">{formatHours(s.today)}</div>
+                <div className="flex gap-3 sm:gap-4 text-right flex-shrink-0 ml-2">
+                  <div className="hidden md:block">
+                    <div className="text-xs text-light-500">Today</div>
+                    <div className="text-sm font-mono text-light-900">{formatHours(s.today)}</div>
                   </div>
                   <div className="hidden sm:block">
-                    <div className="text-xs text-gray-600">Week</div>
-                    <div className="text-sm font-mono text-white">{formatHours(s.week)}</div>
+                    <div className="text-xs text-light-500">Week</div>
+                    <div className="text-sm font-mono text-light-900">{formatHours(s.week)}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-600">Month</div>
-                    <div className="text-sm font-mono text-mango-500">{formatHours(s.month)}</div>
+                    <div className="text-xs text-light-500">Month</div>
+                    <div className="text-sm font-mono text-mango-600">{formatHours(s.month)}</div>
                   </div>
-                  <ChevronDown size={16} className="text-gray-600 self-center" />
+                  <ChevronDown size={16} className="text-light-400 self-center" />
                 </div>
               </button>
             ))}
@@ -262,10 +262,10 @@ function HoursTab({ onViewCrew }: { onViewCrew: (acc: any, entries: any[]) => vo
       </div>
 
       {/* Export */}
-      <div className="card p-5">
+      <div className="card p-4 sm:p-5">
         <div className="flex items-center gap-2 mb-4">
           <Download size={16} className="text-mango-500" />
-          <h2 className="font-semibold text-sm">Export Hours to Excel</h2>
+          <h2 className="font-semibold text-sm text-light-900">Export Hours to Excel</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
           <div>
@@ -302,20 +302,17 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
   const [editEntry, setEditEntry] = useState<any>(null)
   const [deleteEntry, setDeleteEntry] = useState<any>(null)
 
-  // History navigator state
   const [historyMode, setHistoryMode] = useState<'day' | 'week' | 'month'>('day')
   const [historyOffset, setHistoryOffset] = useState(0)
   const [showHistory, setShowHistory] = useState(true)
 
   const now = new Date()
 
-  // Stat card bounds (always current)
   const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0)
   const todayEnd = new Date(now); todayEnd.setHours(23, 59, 59, 999)
   const { start: weekStart, end: weekEnd } = getWeekBounds(now)
   const { start: monthStart, end: monthEnd } = getMonthBounds(now.getFullYear(), now.getMonth())
 
-  // Stat card date labels
   const todayLabel = now.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })
   const weekLabel = `${weekStart.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} – ${weekEnd.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}`
   const monthLabel = now.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })
@@ -326,7 +323,6 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
     return calcHoursInRange(completedEntries, from, to)
   }
 
-  // History window computation
   const historyWindow = (() => {
     if (historyMode === 'day') {
       const d = new Date(now)
@@ -360,21 +356,21 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-3">
-        <button onClick={onBack} className="btn-ghost !py-1.5 !px-3 flex items-center gap-1.5 text-sm">
+    <div className="space-y-4 sm:space-y-5">
+      <div className="flex items-center gap-3 flex-wrap">
+        <button onClick={onBack} className="btn-ghost !py-1.5 !px-2.5 sm:!px-3 flex items-center gap-1.5 text-sm">
           <ArrowLeft size={15} />Back
         </button>
-        <div>
-          <h2 className="font-display text-2xl tracking-wider">{account.name}</h2>
+        <div className="min-w-0">
+          <h2 className="font-display text-xl sm:text-2xl tracking-wider text-light-900">{account.name}</h2>
           <div className={account.active ? 'badge-green' : 'badge-red'}>
             {account.active ? 'Active' : 'Deactivated'}
           </div>
         </div>
       </div>
 
-      {/* Stat cards with date labels */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Stat cards */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <StatCard label="Today" value={formatHours(calcH(todayStart, todayEnd))} sub={todayLabel} />
         <StatCard label="This Week" value={formatHours(calcH(weekStart, weekEnd))} sub={weekLabel} />
         <StatCard label="This Month" value={formatHours(calcH(monthStart, monthEnd))} sub={monthLabel} />
@@ -383,36 +379,36 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
       {/* Work Hours History */}
       <div className="card overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-dark-600">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-light-300">
           <button
             onClick={() => setShowHistory(!showHistory)}
-            className="flex items-center gap-2 hover:text-mango-500 transition-colors"
+            className="flex items-center gap-2 hover:text-mango-600 transition-colors text-light-900"
           >
             <Clock size={16} className="text-mango-500" />
             <span className="font-semibold text-sm">Work Hours History</span>
-            {showHistory ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
+            {showHistory ? <ChevronUp size={16} className="text-light-500" /> : <ChevronDown size={16} className="text-light-500" />}
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="btn-primary !py-1.5 !px-3 text-xs flex items-center gap-1.5"
+            className="btn-primary !py-1.5 !px-2.5 sm:!px-3 text-xs flex items-center gap-1.5"
           >
-            <PlusCircle size={14} />Add Entry
+            <PlusCircle size={14} /><span className="hidden xs:inline">Add Entry</span><span className="xs:hidden">Add</span>
           </button>
         </div>
 
         {showHistory && (
           <>
             {/* Mode Tabs */}
-            <div className="px-5 py-3 border-b border-dark-600">
-              <div className="flex gap-1 bg-dark-800 p-1 rounded-xl w-fit">
+            <div className="px-4 sm:px-5 py-3 border-b border-light-300">
+              <div className="flex gap-1 bg-light-200 p-1 rounded-xl w-fit">
                 {(['day', 'week', 'month'] as const).map(m => (
                   <button
                     key={m}
                     onClick={() => { setHistoryMode(m); setHistoryOffset(0) }}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize
+                    className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize
                       ${historyMode === m
-                        ? 'bg-mango-500 text-dark-900'
-                        : 'text-gray-500 hover:text-white'}`}
+                        ? 'bg-mango-500 text-white shadow-sm'
+                        : 'text-light-600 hover:text-light-900'}`}
                   >
                     {m}
                   </button>
@@ -421,20 +417,20 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
             </div>
 
             {/* Navigation */}
-            <div className="flex items-center justify-between px-5 py-3 bg-dark-800/50 border-b border-dark-600">
+            <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-light-100 border-b border-light-300">
               <button
                 onClick={() => setHistoryOffset(o => o - 1)}
-                className="p-1.5 rounded-lg hover:bg-dark-500 text-gray-400 hover:text-white transition-colors"
+                className="p-2 rounded-lg hover:bg-light-300 text-light-600 hover:text-light-900 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
               >
                 <ChevronLeft size={16} />
               </button>
 
-              <div className="text-center">
-                <div className="text-sm font-semibold text-white">{historyWindow.label}</div>
-                <div className="text-xs text-mango-500 font-mono mt-0.5">
+              <div className="text-center flex-1 px-2">
+                <div className="text-sm font-semibold text-light-900 truncate">{historyWindow.label}</div>
+                <div className="text-xs text-mango-600 font-mono mt-0.5">
                   {formatHours(historyHours)} total
                   {historyOffset === 0 && (
-                    <span className="ml-2 text-gray-600">· current</span>
+                    <span className="ml-2 text-light-400">· current</span>
                   )}
                 </div>
               </div>
@@ -442,7 +438,7 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
               <button
                 onClick={() => setHistoryOffset(o => o + 1)}
                 disabled={historyOffset >= 0}
-                className="p-1.5 rounded-lg hover:bg-dark-500 text-gray-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="p-2 rounded-lg hover:bg-light-300 text-light-600 hover:text-light-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed min-w-[36px] min-h-[36px] flex items-center justify-center"
               >
                 <ChevronRight size={16} />
               </button>
@@ -453,34 +449,35 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
               <EmptyState message={`No entries for this ${historyMode}`} />
             ) : (
               <div className="overflow-x-auto max-h-96 overflow-y-auto">
-                <table className="data-table">
+                <table className="data-table min-w-full">
                   <thead>
                     <tr>
-                      <th>Clock In</th><th>Clock Out</th><th>Duration</th><th>Flags</th><th></th>
+                      <th>Clock In</th><th>Clock Out</th><th>Duration</th>
+                      <th className="hidden sm:table-cell">Flags</th><th></th>
                     </tr>
                   </thead>
                   <tbody>
                     {historyEntries.map(e => (
                       <tr key={e.id}>
-                        <td className="font-mono text-xs text-green-400">{formatDateTime(e.clock_in)}</td>
-                        <td className="font-mono text-xs text-warrior-400">
+                        <td className="font-mono text-xs text-green-700 whitespace-nowrap">{formatDateTime(e.clock_in)}</td>
+                        <td className="font-mono text-xs text-warrior-600 whitespace-nowrap">
                           {e.clock_out ? formatDateTime(e.clock_out) : <span className="badge-green">Open</span>}
                         </td>
-                        <td className="text-xs text-gray-400">
+                        <td className="text-xs text-light-700 whitespace-nowrap">
                           {e.clock_out ? formatHours(calcDuration(e.clock_in, e.clock_out)) : '—'}
                         </td>
-                        <td>
+                        <td className="hidden sm:table-cell">
                           {e.auto_timeout ? <span className="badge-yellow">Auto-out</span> : null}
                           {e.system_timeout ? <span className="badge-red">Sys-out</span> : null}
                         </td>
                         <td>
                           <div className="flex items-center gap-1">
                             <button onClick={() => setEditEntry(e)}
-                              className="p-1.5 rounded-lg hover:bg-dark-500 text-gray-500 hover:text-mango-500 transition-colors">
+                              className="p-1.5 rounded-lg hover:bg-light-200 text-light-500 hover:text-mango-600 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
                               <Edit size={14} />
                             </button>
                             <button onClick={() => setDeleteEntry(e)}
-                              className="p-1.5 rounded-lg hover:bg-dark-500 text-gray-500 hover:text-warrior-400 transition-colors">
+                              className="p-1.5 rounded-lg hover:bg-light-200 text-light-500 hover:text-warrior-500 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
                               <Trash2 size={14} />
                             </button>
                           </div>
@@ -550,7 +547,7 @@ function AddPunchModal({ accountId, onClose, onSuccess }: { accountId: number; o
           <input type="datetime-local" className="input" value={clockIn} onChange={e => setClockIn(e.target.value)} />
         </div>
         <div>
-          <label className="label">Clock Out <span className="text-gray-600">(optional)</span></label>
+          <label className="label">Clock Out <span className="text-light-500 font-normal">(optional)</span></label>
           <input type="datetime-local" className="input" value={clockOut} onChange={e => setClockOut(e.target.value)} />
         </div>
         <div className="flex gap-3 justify-end">
@@ -636,7 +633,7 @@ function AccountsTab() {
   const admins = accounts.filter(a => a.role === 'admin')
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <div className="flex justify-end">
         <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2">
           <Plus size={16} />New Account
@@ -645,35 +642,35 @@ function AccountsTab() {
 
       {[{ label: 'Crew Members', list: crew }, { label: 'Administrators', list: admins }].map(({ label, list }) => (
         <div key={label} className="card overflow-hidden">
-          <div className="px-5 py-4 border-b border-dark-600 flex items-center gap-2">
-            <h2 className="font-semibold text-sm">{label}</h2>
+          <div className="px-4 sm:px-5 py-4 border-b border-light-300 flex items-center gap-2">
+            <h2 className="font-semibold text-sm text-light-900">{label}</h2>
             <span className="badge-gray">{list.length}</span>
           </div>
           {list.length === 0 ? <EmptyState message={`No ${label.toLowerCase()}`} /> : (
-            <div className="divide-y divide-dark-600">
+            <div className="divide-y divide-light-200">
               {list.map(acc => (
-                <div key={acc.id} className="flex items-center justify-between px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm
-                      ${acc.active ? 'bg-mango-500/20 text-mango-500' : 'bg-dark-500 text-gray-600'}`}>
+                <div key={acc.id} className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0
+                      ${acc.active ? 'bg-mango-500/15 text-mango-600' : 'bg-light-300 text-light-500'}`}>
                       {acc.name[0]}
                     </div>
-                    <div>
-                      <div className="font-medium text-sm">{acc.name}</div>
-                      <div className="text-xs text-gray-600">{acc.role} · {acc.active ? 'Active' : 'Inactive'}</div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm text-light-900 truncate">{acc.name}</div>
+                      <div className="text-xs text-light-500">{acc.role} · {acc.active ? 'Active' : 'Inactive'}</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 ml-2">
                     <button onClick={() => setEditAccount(acc)}
-                      className="p-2 rounded-xl hover:bg-dark-500 text-gray-500 hover:text-mango-500 transition-colors" title="Edit">
+                      className="p-2 rounded-xl hover:bg-light-200 text-light-500 hover:text-mango-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center" title="Edit">
                       <Edit size={15} />
                     </button>
                     <button onClick={() => setResetAccount(acc)}
-                      className="p-2 rounded-xl hover:bg-dark-500 text-gray-500 hover:text-blue-400 transition-colors" title="Reset PIN">
+                      className="p-2 rounded-xl hover:bg-light-200 text-light-500 hover:text-blue-500 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center" title="Reset PIN">
                       <KeyRound size={15} />
                     </button>
                     <button onClick={() => setToggleAccount(acc)}
-                      className={`p-2 rounded-xl hover:bg-dark-500 transition-colors ${acc.active ? 'text-gray-500 hover:text-warrior-400' : 'text-gray-500 hover:text-green-400'}`}
+                      className={`p-2 rounded-xl hover:bg-light-200 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center ${acc.active ? 'text-light-500 hover:text-warrior-500' : 'text-light-500 hover:text-green-600'}`}
                       title={acc.active ? 'Deactivate' : 'Reactivate'}>
                       <Power size={15} />
                     </button>
@@ -731,7 +728,7 @@ function CreateAccountModal({ onClose, onSuccess }: { onClose: () => void; onSuc
           <input className="input" placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
         </div>
         <div>
-          <label className="label">Initial PIN <span className="text-gray-600">(min. 4 digits)</span></label>
+          <label className="label">Initial PIN <span className="text-light-500 font-normal">(min. 4 digits)</span></label>
           <input className="input" type="text" inputMode="numeric" placeholder="PIN" value={pin} onChange={e => setPin(e.target.value)} />
         </div>
         <div>
@@ -741,8 +738,8 @@ function CreateAccountModal({ onClose, onSuccess }: { onClose: () => void; onSuc
             <option value="admin">Administrator</option>
           </select>
         </div>
-        {note && <div className="text-xs bg-mango-500/10 border border-mango-500/20 text-mango-400 rounded-xl px-4 py-3">{note}</div>}
-        <p className="text-xs text-gray-600">The user will be required to change their PIN on first login.</p>
+        {note && <div className="text-xs bg-mango-500/8 border border-mango-500/25 text-mango-700 rounded-xl px-4 py-3">{note}</div>}
+        <p className="text-xs text-light-500">The user will be required to change their PIN on first login.</p>
         <div className="flex gap-3 justify-end">
           <button className="btn-ghost" onClick={onClose}>Cancel</button>
           <button className="btn-primary flex items-center gap-2" onClick={handle} disabled={loading}>
@@ -812,7 +809,7 @@ function ResetPinModal({ account, onClose, onSuccess }: { account: any; onClose:
   return (
     <Modal title={`Reset PIN — ${account.name}`} onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-sm text-gray-400">Set a temporary PIN. The user will be required to change it on next login.</p>
+        <p className="text-sm text-light-600">Set a temporary PIN. The user will be required to change it on next login.</p>
         <div>
           <label className="label">New Temporary PIN</label>
           <input className="input" type="text" inputMode="numeric" placeholder="Minimum 4 digits" value={newPin} onChange={e => setNewPin(e.target.value)} />
@@ -856,26 +853,28 @@ function AuditTab() {
 
   return (
     <div className="card overflow-hidden">
-      <div className="px-5 py-4 border-b border-dark-600 flex items-center gap-2">
+      <div className="px-4 sm:px-5 py-4 border-b border-light-300 flex items-center gap-2">
         <ClipboardList size={16} className="text-mango-500" />
-        <h2 className="font-semibold text-sm">Audit Log</h2>
+        <h2 className="font-semibold text-sm text-light-900">Audit Log</h2>
         <span className="badge-gray">{logs.length} entries</span>
       </div>
 
       {logs.length === 0 ? <EmptyState message="No audit logs yet" /> : (
         <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-          <table className="data-table">
+          <table className="data-table min-w-[500px]">
             <thead><tr>
-              <th>Time</th><th>Action</th><th>Actor</th><th>Target</th><th>Details</th>
+              <th>Time</th><th>Action</th><th>Actor</th>
+              <th className="hidden sm:table-cell">Target</th>
+              <th className="hidden md:table-cell">Details</th>
             </tr></thead>
             <tbody>
               {logs.map(log => (
                 <tr key={log.id}>
-                  <td className="font-mono text-xs text-gray-500 whitespace-nowrap">{formatDateTime(log.created_at)}</td>
+                  <td className="font-mono text-xs text-light-600 whitespace-nowrap">{formatDateTime(log.created_at)}</td>
                   <td><span className={actionColors[log.action] || 'badge-gray'}>{log.action.replace(/_/g, ' ')}</span></td>
-                  <td className="text-xs text-mango-500">{log.actor_name}</td>
-                  <td className="text-xs text-gray-400">{log.target_name || '—'}</td>
-                  <td className="text-xs text-gray-600 max-w-xs truncate">{log.details}</td>
+                  <td className="text-xs text-mango-600">{log.actor_name}</td>
+                  <td className="text-xs text-light-600 hidden sm:table-cell">{log.target_name || '—'}</td>
+                  <td className="text-xs text-light-500 max-w-xs truncate hidden md:table-cell">{log.details}</td>
                 </tr>
               ))}
             </tbody>
