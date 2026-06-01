@@ -33,7 +33,7 @@ export default function ChangePinPage() {
       const updated = { ...user, mustChangePin: false }
       setUser(updated)
       toast('PIN changed successfully!', 'success')
-      setTimeout(() => navigate(user.role === 'admin' ? '/admin' : '/crew'), 1000)
+      setTimeout(() => navigate(user?.role === 'admin' ? '/admin' : '/crew'), 1000)
     } catch (err: any) {
       setError(err.message || 'Failed to change PIN')
       toast(err.message || 'Failed to change PIN', 'error')

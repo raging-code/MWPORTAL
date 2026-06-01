@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   LogOut, Users, Clock, Download, Plus, ChevronDown, ChevronUp,
-  Edit, Power, KeyRound, Shield, ClipboardList, ArrowLeft, Trash2, PlusCircle
+  Edit, Power, KeyRound, Shield, ClipboardList, ArrowLeft, Trash2, PlusCircle,
+  ChevronLeft, ChevronRight
 } from 'lucide-react'
 import { api, getUser, clearToken } from '../lib/api'
 import { formatHours, formatDateTime, calcDuration, exportToXLSX } from '../lib/utils'
@@ -13,6 +14,63 @@ import {
 
 type Tab = 'crew' | 'accounts' | 'audit'
 type SubView = null | { type: 'crew-detail'; account: any; entries: any[] }
+
+// ─── Date helpers (shared with CrewDashboard) ─────────────────────────────────
+
+function getWeekBounds(date: Date): { start: Date; end: Date } {
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = day === 0 ? 6 : day - 1
+  const start = new Date(d)
+  start.setDate(d.getDate() - diff)
+  start.setHours(0, 0, 0, 0)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+  end.setHours(23, 59, 59, 999)
+  return { start, end }
+}
+
+function getMonthBounds(year: number, month: number): { start: Date; end: Date } {
+  const start = new Date(year, month, 1)
+  const end = new Date(year, month + 1, 0, 23, 59, 59, 999)
+  return { start, end }
+}
+
+function calcHoursInRange(entries: any[], from: Date, to: Date): number {
+  let total = 0
+  for (const e of entries) {
+    if (!e.clock_out) continue
+    const ci = new Date(e.clock_in), co = new Date(e.clock_out)
+    if (co >= from && ci <= to) {
+      const s = ci < from ? from : ci
+      const en = co > to ? to : co
+      total += (en.getTime() - s.getTime()) / 3600000
+    }
+  }
+  return Math.round(total * 100) / 100
+}
+
+function filterEntriesInRange(entries: any[], from: Date, to: Date): any[] {
+  return entries.filter(e => {
+    const ci = new Date(e.clock_in)
+    const co = e.clock_out ? new Date(e.clock_out) : new Date()
+    return co >= from && ci <= to
+  })
+}
+
+function fmtDay(d: Date): string {
+  return d.toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+}
+
+function fmtWeekRange(start: Date, end: Date): string {
+  const s = start.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })
+  const e = end.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
+  return `${s} – ${e}`
+}
+
+function fmtMonth(year: number, month: number): string {
+  return new Date(year, month, 1).toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })
+}
 
 // ─── Admin Dashboard ──────────────────────────────────────────────────────────
 
@@ -107,6 +165,12 @@ function HoursTab({ onViewCrew }: { onViewCrew: (acc: any, entries: any[]) => vo
   const [exportTarget, setExportTarget] = useState('all')
   const [exporting, setExporting] = useState(false)
 
+  const now = new Date()
+  const todayLabel = now.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })
+  const { start: wkStart, end: wkEnd } = getWeekBounds(now)
+  const weekLabel = `${wkStart.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} – ${wkEnd.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}`
+  const monthLabel = now.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })
+
   const load = useCallback(async () => {
     try {
       const data = await api.adminAllHours()
@@ -150,7 +214,12 @@ function HoursTab({ onViewCrew }: { onViewCrew: (acc: any, entries: any[]) => vo
       {/* Crew Cards */}
       <div className="card overflow-hidden">
         <div className="px-5 py-4 border-b border-dark-600 flex items-center justify-between">
-          <h2 className="font-semibold">Crew Work Hours</h2>
+          <div>
+            <h2 className="font-semibold">Crew Work Hours</h2>
+            <div className="text-xs text-gray-500 mt-0.5">
+              Today: {todayLabel} · Week: {weekLabel} · Month: {monthLabel}
+            </div>
+          </div>
           <button onClick={load} className="text-xs text-gray-500 hover:text-mango-500 transition-colors">Refresh</button>
         </div>
 
@@ -233,28 +302,53 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
   const [editEntry, setEditEntry] = useState<any>(null)
   const [deleteEntry, setDeleteEntry] = useState<any>(null)
 
-  const completedEntries = entries.filter(e => e.clock_out)
+  // History navigator state
+  const [historyMode, setHistoryMode] = useState<'day' | 'week' | 'month'>('day')
+  const [historyOffset, setHistoryOffset] = useState(0)
+  const [showHistory, setShowHistory] = useState(true)
 
   const now = new Date()
+
+  // Stat card bounds (always current)
   const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0)
-  const dayOfWeek = now.getDay(); const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-  const weekStart = new Date(now); weekStart.setDate(now.getDate() - diff); weekStart.setHours(0, 0, 0, 0)
-  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6); weekEnd.setHours(23, 59, 59, 999)
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
   const todayEnd = new Date(now); todayEnd.setHours(23, 59, 59, 999)
+  const { start: weekStart, end: weekEnd } = getWeekBounds(now)
+  const { start: monthStart, end: monthEnd } = getMonthBounds(now.getFullYear(), now.getMonth())
+
+  // Stat card date labels
+  const todayLabel = now.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })
+  const weekLabel = `${weekStart.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} – ${weekEnd.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}`
+  const monthLabel = now.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })
+
+  const completedEntries = entries.filter(e => e.clock_out)
 
   function calcH(from: Date, to: Date) {
-    let total = 0
-    for (const e of completedEntries) {
-      const ci = new Date(e.clock_in), co = new Date(e.clock_out)
-      if (co >= from && ci <= to) {
-        const s = ci < from ? from : ci, en = co > to ? to : co
-        total += (en.getTime() - s.getTime()) / 3600000
-      }
-    }
-    return Math.round(total * 100) / 100
+    return calcHoursInRange(completedEntries, from, to)
   }
+
+  // History window computation
+  const historyWindow = (() => {
+    if (historyMode === 'day') {
+      const d = new Date(now)
+      d.setDate(d.getDate() + historyOffset)
+      const start = new Date(d); start.setHours(0, 0, 0, 0)
+      const end = new Date(d); end.setHours(23, 59, 59, 999)
+      return { start, end, label: fmtDay(d) }
+    } else if (historyMode === 'week') {
+      const d = new Date(now)
+      d.setDate(d.getDate() + historyOffset * 7)
+      const { start, end } = getWeekBounds(d)
+      return { start, end, label: fmtWeekRange(start, end) }
+    } else {
+      const d = new Date(now)
+      d.setMonth(d.getMonth() + historyOffset)
+      const { start, end } = getMonthBounds(d.getFullYear(), d.getMonth())
+      return { start, end, label: fmtMonth(d.getFullYear(), d.getMonth()) }
+    }
+  })()
+
+  const historyEntries = filterEntriesInRange(entries, historyWindow.start, historyWindow.end)
+  const historyHours = calcHoursInRange(completedEntries, historyWindow.start, historyWindow.end)
 
   async function handleDelete(entry: any) {
     try {
@@ -279,58 +373,125 @@ function CrewDetailView({ account, entries, onBack, onRefresh }: {
         </div>
       </div>
 
+      {/* Stat cards with date labels */}
       <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Today" value={formatHours(calcH(todayStart, todayEnd))} />
-        <StatCard label="This Week" value={formatHours(calcH(weekStart, weekEnd))} />
-        <StatCard label="This Month" value={formatHours(calcH(monthStart, monthEnd))} />
+        <StatCard label="Today" value={formatHours(calcH(todayStart, todayEnd))} sub={todayLabel} />
+        <StatCard label="This Week" value={formatHours(calcH(weekStart, weekEnd))} sub={weekLabel} />
+        <StatCard label="This Month" value={formatHours(calcH(monthStart, monthEnd))} sub={monthLabel} />
       </div>
 
+      {/* Work Hours History */}
       <div className="card overflow-hidden">
-        <div className="px-5 py-4 border-b border-dark-600 flex items-center justify-between">
-          <h3 className="font-semibold text-sm">Time Entries</h3>
-          <button onClick={() => setShowAddModal(true)}
-            className="btn-primary !py-1.5 !px-3 text-xs flex items-center gap-1.5">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-dark-600">
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="flex items-center gap-2 hover:text-mango-500 transition-colors"
+          >
+            <Clock size={16} className="text-mango-500" />
+            <span className="font-semibold text-sm">Work Hours History</span>
+            {showHistory ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="btn-primary !py-1.5 !px-3 text-xs flex items-center gap-1.5"
+          >
             <PlusCircle size={14} />Add Entry
           </button>
         </div>
 
-        {entries.length === 0 ? <EmptyState message="No entries" /> : (
-          <div className="overflow-x-auto max-h-96 overflow-y-auto">
-            <table className="data-table">
-              <thead><tr>
-                <th>Clock In</th><th>Clock Out</th><th>Duration</th><th>Flags</th><th></th>
-              </tr></thead>
-              <tbody>
-                {entries.map(e => (
-                  <tr key={e.id}>
-                    <td className="font-mono text-xs text-green-400">{formatDateTime(e.clock_in)}</td>
-                    <td className="font-mono text-xs text-warrior-400">
-                      {e.clock_out ? formatDateTime(e.clock_out) : <span className="badge-green">Open</span>}
-                    </td>
-                    <td className="text-xs text-gray-400">
-                      {e.clock_out ? formatHours(calcDuration(e.clock_in, e.clock_out)) : '—'}
-                    </td>
-                    <td>
-                      {e.auto_timeout ? <span className="badge-yellow">Auto-out</span> : null}
-                      {e.system_timeout ? <span className="badge-red">Sys-out</span> : null}
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setEditEntry(e)}
-                          className="p-1.5 rounded-lg hover:bg-dark-500 text-gray-500 hover:text-mango-500 transition-colors">
-                          <Edit size={14} />
-                        </button>
-                        <button onClick={() => setDeleteEntry(e)}
-                          className="p-1.5 rounded-lg hover:bg-dark-500 text-gray-500 hover:text-warrior-400 transition-colors">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+        {showHistory && (
+          <>
+            {/* Mode Tabs */}
+            <div className="px-5 py-3 border-b border-dark-600">
+              <div className="flex gap-1 bg-dark-800 p-1 rounded-xl w-fit">
+                {(['day', 'week', 'month'] as const).map(m => (
+                  <button
+                    key={m}
+                    onClick={() => { setHistoryMode(m); setHistoryOffset(0) }}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize
+                      ${historyMode === m
+                        ? 'bg-mango-500 text-dark-900'
+                        : 'text-gray-500 hover:text-white'}`}
+                  >
+                    {m}
+                  </button>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <div className="flex items-center justify-between px-5 py-3 bg-dark-800/50 border-b border-dark-600">
+              <button
+                onClick={() => setHistoryOffset(o => o - 1)}
+                className="p-1.5 rounded-lg hover:bg-dark-500 text-gray-400 hover:text-white transition-colors"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              <div className="text-center">
+                <div className="text-sm font-semibold text-white">{historyWindow.label}</div>
+                <div className="text-xs text-mango-500 font-mono mt-0.5">
+                  {formatHours(historyHours)} total
+                  {historyOffset === 0 && (
+                    <span className="ml-2 text-gray-600">· current</span>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setHistoryOffset(o => o + 1)}
+                disabled={historyOffset >= 0}
+                className="p-1.5 rounded-lg hover:bg-dark-500 text-gray-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+
+            {/* Entries Table */}
+            {historyEntries.length === 0 ? (
+              <EmptyState message={`No entries for this ${historyMode}`} />
+            ) : (
+              <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Clock In</th><th>Clock Out</th><th>Duration</th><th>Flags</th><th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {historyEntries.map(e => (
+                      <tr key={e.id}>
+                        <td className="font-mono text-xs text-green-400">{formatDateTime(e.clock_in)}</td>
+                        <td className="font-mono text-xs text-warrior-400">
+                          {e.clock_out ? formatDateTime(e.clock_out) : <span className="badge-green">Open</span>}
+                        </td>
+                        <td className="text-xs text-gray-400">
+                          {e.clock_out ? formatHours(calcDuration(e.clock_in, e.clock_out)) : '—'}
+                        </td>
+                        <td>
+                          {e.auto_timeout ? <span className="badge-yellow">Auto-out</span> : null}
+                          {e.system_timeout ? <span className="badge-red">Sys-out</span> : null}
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => setEditEntry(e)}
+                              className="p-1.5 rounded-lg hover:bg-dark-500 text-gray-500 hover:text-mango-500 transition-colors">
+                              <Edit size={14} />
+                            </button>
+                            <button onClick={() => setDeleteEntry(e)}
+                              className="p-1.5 rounded-lg hover:bg-dark-500 text-gray-500 hover:text-warrior-400 transition-colors">
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
         )}
       </div>
 
