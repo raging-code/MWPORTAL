@@ -7,7 +7,7 @@ workers_dev = true
 [[d1_databases]]
 binding = "DB"
 database_name = "mwportal-db"
-database_id = "2ac7b70a-0886-49aa-8cdf-d52bd5ab4602"
+database_id = "e75ad089-91ee-495f-9bc4-df04361a4fc4"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SECURITY — IMPORTANT: JWT_SECRET must NEVER be stored in [vars].
@@ -26,4 +26,4 @@ database_id = "2ac7b70a-0886-49aa-8cdf-d52bd5ab4602"
 
 [vars]
 # Non-secret config only. Set your production frontend URL to lock down CORS:
-ALLOWED_ORIGIN = "https://YOUR_PAGES_DOMAIN.pages.dev"
+ALLOWED_ORIGIN = "https://mwportal.pages.dev/"
