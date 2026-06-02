@@ -15,16 +15,45 @@ export function clearToken() {
   localStorage.removeItem('mw_user')
 }
 
-export function getUser(): { id: number; name: string; role: 'crew' | 'admin'; mustChangePin: boolean } | null {
-  const u = localStorage.getItem('mw_user')
-  return u ? JSON.parse(u) : null
+export function getUser(): {
+  id: number
+  name: string
+  role: 'crew' | 'admin'
+  mustChangePin: boolean
+} | null {
+  try {
+    const raw = localStorage.getItem('mw_user')
+    if (!raw) return null
+    const u = JSON.parse(raw)
+    if (!u || typeof u.id !== 'number' || !u.role || !u.name) return null
+
+    // Client-side token expiry check — server always re-validates too
+    const token = getToken()
+    if (token) {
+      try {
+        const parts = token.split('.')
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]))
+          if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+            clearToken()
+            return null
+          }
+        }
+      } catch { /* malformed token — will fail on next request */ }
+    }
+    return u
+  } catch {
+    return null
+  }
 }
 
-export function setUser(user: any) {
+export function setUser(user: {
+  id: number; name: string; role: 'crew' | 'admin'; mustChangePin: boolean
+}) {
   localStorage.setItem('mw_user', JSON.stringify(user))
 }
 
-async function request<T>(method: string, path: string, body?: any): Promise<T> {
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   const token = getToken()
   if (token) headers['Authorization'] = `Bearer ${token}`
@@ -32,30 +61,30 @@ async function request<T>(method: string, path: string, body?: any): Promise<T> 
   const res = await fetch(BASE + path, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
   })
 
   if (res.status === 401) {
     clearToken()
     window.location.href = '/login'
-    throw new Error('Unauthorized')
+    throw new Error('Session expired — please log in again')
   }
 
-  const data = await res.json()
-  if (!res.ok) throw new Error(data.error || 'Request failed')
+  let data: any
+  try { data = await res.json() } catch { throw new Error('Unexpected server response') }
+
+  if (!res.ok) throw new Error(data?.error || 'Request failed')
   return data as T
 }
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
-
 export const api = {
   login: (name: string, pin: string) =>
-    request<{ token: string; user: any }>('POST', '/auth/login', { name, pin }),
+    request<{ token: string; user: { id: number; name: string; role: 'crew' | 'admin'; mustChangePin: boolean } }>(
+      'POST', '/auth/login', { name, pin }
+    ),
 
   changePin: (currentPin: string, newPin: string) =>
     request<{ success: boolean }>('POST', '/auth/change-pin', { currentPin, newPin }),
-
-  // ─── Punch ───────────────────────────────────────────────────────────────
 
   punchStatus: () =>
     request<{ clockedIn: boolean; entryId: number | null; since: string | null }>('GET', '/punch/status'),
@@ -66,8 +95,6 @@ export const api = {
   punchOut: () =>
     request<{ success: boolean; clockOut: string }>('POST', '/punch/out'),
 
-  // ─── Hours ───────────────────────────────────────────────────────────────
-
   myHours: () =>
     request<{ today: number; week: number; month: number; entries: any[] }>('GET', '/hours/my'),
 
@@ -76,8 +103,6 @@ export const api = {
     if (accountId) params.set('accountId', accountId)
     return request<{ entries: any[] }>('GET', `/hours/export?${params}`)
   },
-
-  // ─── Admin ───────────────────────────────────────────────────────────────
 
   adminGetAccounts: () =>
     request<{ accounts: any[] }>('GET', '/admin/accounts'),

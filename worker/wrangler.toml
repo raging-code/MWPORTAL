@@ -9,5 +9,21 @@ binding = "DB"
 database_name = "mwportal-db"
 database_id = "2ac7b70a-0886-49aa-8cdf-d52bd5ab4602"
 
+# ─────────────────────────────────────────────────────────────────────────────
+# SECURITY — IMPORTANT: JWT_SECRET must NEVER be stored in [vars].
+# The old JWT_SECRET that was committed to Git is now compromised.
+#
+# You MUST run this command to set a new secret:
+#   wrangler secret put JWT_SECRET
+#   (paste a strong random value when prompted)
+#
+# Generate one with:
+#   node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+#
+# ALSO: Your database_id was exposed in Git. It is not sensitive on its own
+# but replace it above with your actual ID from the Cloudflare dashboard.
+# ─────────────────────────────────────────────────────────────────────────────
+
 [vars]
-JWT_SECRET = "y84XU2zGakgLnPFvo4854fYAQn92RZ07fME6wJX7xR5TWCN95u9Yx9x0h0wFjXDP"
+# Non-secret config only. Set your production frontend URL to lock down CORS:
+ALLOWED_ORIGIN = "https://YOUR_PAGES_DOMAIN.pages.dev"
