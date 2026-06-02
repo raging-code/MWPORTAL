@@ -2,7 +2,7 @@ name = "mwportal-worker"
 main = "src/index.ts"
 compatibility_date = "2024-10-22"
 compatibility_flags = ["nodejs_compat"]
-workers_dev = true
+workers_dev = false
 
 [[d1_databases]]
 binding = "DB"
@@ -25,5 +25,7 @@ database_id = "e75ad089-91ee-495f-9bc4-df04361a4fc4"
 # ─────────────────────────────────────────────────────────────────────────────
 
 [vars]
-# Non-secret config only. Set your production frontend URL to lock down CORS:
-ALLOWED_ORIGIN = "https://mwportal.pages.dev/"
+# Non-secret config only. Set your production frontend URL to lock down CORS.
+# FIX: removed trailing slash — browser sends Origin without trailing slash,
+# so an exact-match CORS check with "/" appended will always fail.
+ALLOWED_ORIGIN = "https://mwportal.pages.dev"

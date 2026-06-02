@@ -149,9 +149,14 @@ const app = new Hono<{ Bindings: Env; Variables: { jwtPayload: JWTPayload } }>()
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 // Locks down to ALLOWED_ORIGIN (set as wrangler var, e.g. your Pages domain).
 // Falls back to '*' only if the var is missing — set it before going to prod!
+//
+// FIX: strip trailing slash from ALLOWED_ORIGIN before matching.
+// Browsers send Origin as "https://example.com" (no trailing slash).
+// If ALLOWED_ORIGIN was accidentally set with a trailing slash in wrangler.toml,
+// the exact-match check would always fail and block every CORS preflight.
 
 app.use('*', async (c, next) => {
-  const origin = (c.env.ALLOWED_ORIGIN || '*').trim()
+  const origin = (c.env.ALLOWED_ORIGIN || '*').trim().replace(/\/$/, '')
   return cors({
     origin,
     allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
